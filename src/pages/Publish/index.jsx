@@ -40,6 +40,12 @@ const Publish = () => {
 
   // 发布文章
   const onFinish = async (formValue) => {
+    if(imageList.length !== imageType) {
+      // 选择了三图但是只选择了 一张图片
+      message.warning('请上传指定数量的图片')
+      return
+    }
+
     try {
       const { channel_id, content, title } = formValue
       const params = {
@@ -47,8 +53,8 @@ const Publish = () => {
         content,
         title,
         cover: {
-          type: 0,
-          images: []
+          type: imageType,
+          images: imageList.map(item => item.response.data.url)
         }
       }
       await http.post('/mp/articles?draft=false', params)
@@ -65,6 +71,14 @@ const Publish = () => {
   const onUploadChange = (info) => {
     console.log(info)
     setImageList(info.fileList)
+  }
+
+  // 控制图片Type
+  const [imageType, setImageType] = useState(1)
+
+  const onTypeChange = (e) => {
+    console.log(e)
+    setImageType(e.target.value)
   }
 
   return (
@@ -107,12 +121,13 @@ const Publish = () => {
 
           <Form.Item label="封面">
             <Form.Item name="type">
-              <Radio.Group>
+              <Radio.Group onChange={onTypeChange}>
                 <Radio value={1}>单图</Radio>
                 <Radio value={3}>三图</Radio>
                 <Radio value={0}>无图</Radio>
               </Radio.Group>
             </Form.Item>
+            { imageType > 0 &&
             <Upload
               // listType 决定了上传列表的展示方式
               // showUploadList 控制是否展示上传列表
@@ -123,11 +138,13 @@ const Publish = () => {
               // 上传的接口接口
               action={'http://geek.itheima.net/v1_0/upload'}
               onChange={onUploadChange}
+              maxCount={ imageType }
+              // multiple={ imageType > 1 }
             >
               <div style={{ marginTop: 8 }}>
                 <PlusOutlined />
               </div>
-            </Upload>
+            </Upload>}
           </Form.Item>
   
           <Form.Item
